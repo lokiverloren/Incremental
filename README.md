@@ -13,6 +13,6 @@ From this journal data structure I will be implementing a file-by-file bittorren
 
 Eliminating arbitrary boundaries in processes of software development and distribution is the objective of Incremental, while retaining the advantages of more optimised, faster-running executable objects.
 
-== About the creator of Incremental
+## About the creator of Incremental
 
 Loki Verloren, given the name David Vennik at birth, is an Australian/Dutch citizen, currently living in Amsterdam. He has avidly studied computer science (abstract data structures, language translation, feedback-driven dynamical systems) and various fields of mathematics such as topology, chaos theory, network theory, number theory, in general science quantum and relativistic physics, organic chemistry, pharmacology and the biology of metabolism and nervous systems. Beset by circumstance and 'divergent' cognitive processes and a rebellious streak, he feels that now is the time, with the conditions as they are, to finally make a splash in the field of software development.
