@@ -16,3 +16,7 @@ Eliminating arbitrary boundaries in processes of software development and distri
 ## About the creator of Incremental
 
 Loki Verloren, given the name David Vennik at birth, is an Australian/Dutch citizen, currently living in Amsterdam. He has avidly studied computer science (abstract data structures, language translation, feedback-driven dynamical systems) and various fields of mathematics such as topology, chaos theory, network theory, number theory, in general science quantum and relativistic physics, organic chemistry, pharmacology and the biology of metabolism and nervous systems. Beset by circumstance and 'divergent' cognitive processes and a rebellious streak, he feels that now is the time, with the conditions as they are, to finally make a splash in the field of software development.
+
+## Technical Details
+
+This application is being build within the Elementary OS "freya" beta and depends on Gtk+ 3.12 and Vala 0.27.1, and, of course, a full working GNU development toolchain, it configures and builds with GNU autotools. With everything in place you just './autogen.sh' and then 'make' and to install, if you want, 'make install' but it can be run directly out of the src/ directory. Further details on how to build this will come later, when there is more to work with that beginners or non-technical types, there will be packaging done for installing binaries, initially on linux but the dependent libraries can be used in Windows and MacOS apps so there will be versions eventually for these environments.
