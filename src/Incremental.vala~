@@ -92,6 +92,13 @@ Incremental : Gtk.Application
 
 		return headerbar;
 	}	
+
+	protected Gtk.TreeView create_treeview ()
+	{
+		var treeview = new Gtk.TreeView (); 
+		return treeview;
+	}
+	
 	protected Gtk.Grid create_interface ()
 	{
 		var grid = new Gtk.Grid ();
