@@ -17,6 +17,9 @@
 
 using Gtk;
 using Gdk;
+using GLib;
+
+public delegate void MyCallBack(GLib.Action a);
 
 public class
 Incremental : Gtk.Application
@@ -25,20 +28,10 @@ Incremental : Gtk.Application
 	public string AppName = "Incremental";
 	public string Version = "0.1" ;
 
-    // protected GUI interface objects
+    // GUI interface objects
+	protected Gtk.ApplicationWindow window;
+
     protected Gtk.Grid interface_grid;
-
-    protected Gtk.ScrolledWindow interface_tree_scroller;
-    protected Gtk.Viewport interface_tree_viewport;
-
-    protected Gtk.ScrolledWindow interface_document_scroller;
-    protected Gtk.Viewport interface_document_viewport;
-
-    protected Gtk.ScrolledWindow interface_terminal_scroller;
-    protected Gtk.Viewport interface_terminal_viewport;
-
-    protected Gtk.ScrolledWindow interface_help_scroller;
-    protected Gtk.Viewport interface_help_viewport;
 
     protected Gtk.TreeView interface_tree_view;
 
@@ -58,6 +51,8 @@ Incremental : Gtk.Application
     protected Gtk.ToggleButton hide_terminal;
     protected Gtk.ToggleButton hide_help;
 
+	protected Gtk.AccelGroup accel_group;
+
 	public enum
 	Columns
 	{
@@ -65,6 +60,18 @@ Incremental : Gtk.Application
 		BODY,
 		N_COLUMNS
 	}
+
+	public struct
+	svp
+	{
+		Gtk.ScrolledWindow scroller;
+		Gtk.Viewport viewport;
+	}
+
+	protected svp interface_tree;
+	protected svp interface_document;
+	protected svp interface_help;
+	protected svp interface_terminal;
 
 	public
 	Incremental ()
@@ -81,6 +88,9 @@ Incremental : Gtk.Application
 		window.title = @"$AppName $Version";
 		window.set_position (WindowPosition.CENTER);
 		window.set_titlebar(create_headerbar ());
+
+		create_actions ();
+
         interface_grid = create_viewer ();
 
 		window.add(interface_grid);
@@ -90,7 +100,47 @@ Incremental : Gtk.Application
         toggle_terminal();
 	}
 
-    protected void toggle_visible_prototype (Gtk.Widget widget)
+	public void toggle_tree_activate (Variant? parameter)
+	{
+		toggle_tree ();
+		stderr.printf ("toggle-tree action activated\n");
+	}
+
+	public void toggle_terminal_activate (Variant? parameter)
+	{
+		toggle_terminal ();
+		stderr.printf ("toggle-terminal action activated\n");
+	}
+
+	public void toggle_help_activate (Variant? parameter)
+	{
+		toggle_help ();
+		stderr.printf ("toggle-help action activated\n");
+	}
+
+	protected void
+	create_actions ()
+	{
+		var toggle_terminal_action = 
+			new GLib.SimpleAction ("toggle-terminal", null);
+		toggle_terminal_action.activate.connect (toggle_terminal_activate);
+		this.add_action (toggle_terminal_action);
+		this.set_accels_for_action ("app.toggle-terminal", {"F12"});
+
+		var toggle_help_action = new GLib.SimpleAction ("toggle-help", null);
+		toggle_help_action.activate.connect (toggle_help_activate);
+		this.add_action (toggle_help_action);
+		this.set_accels_for_action ("app.toggle-help", {"F1"});
+
+		var toggle_tree_action = new GLib.SimpleAction ("toggle-tree", null);
+		toggle_tree_action.activate.connect (toggle_tree_activate);
+		this.add_action (toggle_tree_action);
+		this.set_accels_for_action ("app.toggle-tree", {"F10"});
+
+	}
+
+    protected void
+	toggle_visible_prototype (Gtk.Widget widget)
     {
         if (widget.visible)
         {
@@ -100,19 +150,22 @@ Incremental : Gtk.Application
         }
     }
 
-    protected void toggle_tree ()
+    protected void
+	toggle_tree ()
     {
-        toggle_visible_prototype (interface_tree_scroller);
+        toggle_visible_prototype (interface_tree.scroller);
     }
 
-    protected void toggle_help ()
+    protected void
+	toggle_help ()
     {
-        toggle_visible_prototype (interface_help_scroller);
+        toggle_visible_prototype (interface_help.scroller);
     }
 
-    protected void toggle_terminal ()
+    protected void
+	toggle_terminal ()
     {
-        toggle_visible_prototype (interface_terminal_scroller);
+        toggle_visible_prototype (interface_terminal.scroller);
     }
 
 	protected Gtk.HeaderBar
@@ -121,17 +174,17 @@ Incremental : Gtk.Application
 		headerbar = new HeaderBar ();
         headerbar.set_show_close_button(true);
 
-        hide_tree = new ToggleButton ();
-        hide_tree.image = new Gtk.Image.from_icon_name
-            ("pane-hide-symbolic", IconSize.BUTTON);
-        hide_tree.set_tooltip_text ("Hide tree");
-        hide_tree.active = true;
-        hide_tree.toggled.connect(toggle_tree);
-        headerbar.pack_start (hide_tree);
-
         append_node = new Button.from_icon_name ("list-add-symbolic");
         append_node.set_tooltip_text ("Append new item to tree");
         headerbar.pack_start (append_node);
+
+		undo = new Button.from_icon_name ("edit-undo-symbolic");
+		undo.set_tooltip_text ("Undo");
+		headerbar.pack_start (undo);
+
+		redo = new Button.from_icon_name ("edit-redo-symbolic");
+		redo.set_tooltip_text ("Redo");
+		headerbar.pack_start (redo);
 
 		file_box = new Box (Orientation.HORIZONTAL, 0);
 
@@ -155,55 +208,57 @@ Incremental : Gtk.Application
         hide_help.image = new Gtk.Image.from_icon_name
             ("help-browser-symbolic", IconSize.BUTTON);
         hide_help.set_tooltip_text ("Open help browser");
-        hide_help.toggled.connect (toggle_help);
+        //hide_help.toggled.connect (toggle_help);
+        hide_help.set_action_name ("app.toggle-help");
 		headerbar.pack_end (hide_help);
 
         hide_terminal = new ToggleButton ();
         hide_terminal.image = new Gtk.Image.from_icon_name
             ("utilities-terminal-symbolic", IconSize.BUTTON);
         hide_terminal.set_tooltip_text ("Pop up terminal");
-        hide_terminal.toggled.connect (toggle_terminal);
+        //hide_terminal.toggled.connect (toggle_terminal);
+        hide_terminal.set_action_name ("app.toggle-terminal");
         headerbar.pack_end (hide_terminal);
 
-		redo = new Button.from_icon_name ("edit-redo-symbolic");
-		redo.set_tooltip_text ("Redo");
-		headerbar.pack_end (redo);
-
-		undo = new Button.from_icon_name ("edit-undo-symbolic");
-		undo.set_tooltip_text ("Undo");
-		headerbar.pack_end (undo);
+        hide_tree = new ToggleButton ();
+        hide_tree.image = new Gtk.Image.from_icon_name
+            ("pane-hide-symbolic", IconSize.BUTTON);
+        hide_tree.set_tooltip_text ("Hide tree");
+    	hide_tree.active = true;
+        //hide_tree.toggled.connect(toggle_tree);
+        hide_tree.set_action_name ("app.toggle-tree");
+        headerbar.pack_end (hide_tree);
 
 		return headerbar;
 	}
 
+	protected svp
+	new_svp ()
+	{
+		svp temp = {
+			new Gtk.ScrolledWindow (null, null),
+			new Gtk.Viewport (null, null)
+		};
+		temp.scroller.add (temp.viewport);
+		return temp;
+	}
 
 	protected Gtk.Grid
     create_viewer ()
 	{
 		interface_grid = new Gtk.Grid ();
 
-        interface_tree_scroller = new Gtk.ScrolledWindow (null, null);
-        interface_tree_viewport = new Gtk.Viewport (null, null);
-        interface_tree_scroller.add (interface_tree_viewport);
+        interface_tree = new_svp ();
+        interface_document = new_svp ();
+        interface_terminal = new_svp ();
+        interface_help = new_svp ();
 
-        interface_document_scroller = new Gtk.ScrolledWindow (null, null);
-        interface_document_viewport = new Gtk.Viewport (null, null);
-        interface_document_scroller.add (interface_document_viewport);
+        interface_grid.attach (interface_tree.scroller,     0, 0, 1, 1);
+        interface_grid.attach (interface_document.scroller, 1, 0, 1, 1);
+        interface_grid.attach (interface_help.scroller,     2, 0, 1, 1);
+        interface_grid.attach (interface_terminal.scroller, 0, 1, 3, 1);
 
-        interface_terminal_scroller = new Gtk.ScrolledWindow (null, null);
-        interface_terminal_viewport = new Gtk.Viewport (null, null);
-        interface_terminal_scroller.add (interface_terminal_viewport);
-
-        interface_help_scroller = new Gtk.ScrolledWindow (null, null);
-        interface_help_viewport = new Gtk.Viewport (null, null);
-        interface_help_scroller.add (interface_help_viewport);
-
-        interface_grid.attach (interface_tree_scroller,     0, 0, 1, 1);
-        interface_grid.attach (interface_document_scroller, 1, 0, 1, 1);
-        interface_grid.attach (interface_help_scroller,     2, 0, 1, 1);
-        interface_grid.attach (interface_terminal_scroller, 0, 1, 3, 1);
-
-        // just example placeholders to show the hide/show interface
+        // placeholders to show the hide/show interface
         var temp_tree = new Gtk.Frame ("tree");
         temp_tree.expand = true;
         var temp_document = new Gtk.Frame ("document");
@@ -213,10 +268,10 @@ Incremental : Gtk.Application
         var temp_help = new Gtk.Frame ("help");
         temp_help.expand = true;
 
-        interface_tree_viewport.add (temp_tree);
-        interface_document_viewport.add (temp_document);
-        interface_terminal_viewport.add (temp_terminal);
-        interface_help_viewport.add (temp_help);
+        interface_tree.viewport.add (temp_tree);
+        interface_document.viewport.add (temp_document);
+        interface_terminal.viewport.add (temp_terminal);
+        interface_help.viewport.add (temp_help);
 
 		return interface_grid;
 	}
