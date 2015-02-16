@@ -129,7 +129,8 @@ Incremental : Gtk.Application
 			this.release ();
 			});
 		this.add_action (toggle_terminal_action);
-		this.set_accels_for_action ("app.toggle-terminal", {"F12"});
+		this.set_accels_for_action ("app.toggle-terminal", 
+			{hide_terminal_accelerator});
 
 		var toggle_help_action = 
 			new GLib.SimpleAction.stateful ("toggle-help", null,
@@ -143,7 +144,7 @@ Incremental : Gtk.Application
 			this.release ();
 			});
 		this.add_action (toggle_help_action);
-		this.set_accels_for_action ("app.toggle-help", {"F1"});
+		this.set_accels_for_action ("app.toggle-help", {hide_help_accelerator});
 
 		var toggle_tree_action = 
 			new GLib.SimpleAction.stateful ("toggle-tree", null,
@@ -157,7 +158,7 @@ Incremental : Gtk.Application
 			this.release ();
 			});
 		this.add_action (toggle_tree_action);
-		this.set_accels_for_action ("app.toggle-tree", {"F10"});
+		this.set_accels_for_action ("app.toggle-tree", {hide_tree_accelerator});
 
 		var undo_action = 
 			new GLib.SimpleAction ("undo", null);
@@ -177,7 +178,7 @@ Incremental : Gtk.Application
 			this.release ();
 			});
 		this.add_action (redo_action);
-		this.set_accels_for_action ("app.redo", {"<ctrl>y"});
+		this.set_accels_for_action ("app.redo", {redo_accelerator});
 
 		var append_action = 
 			new GLib.SimpleAction ("append", null);
@@ -187,7 +188,7 @@ Incremental : Gtk.Application
 			this.release ();
 			});
 		this.add_action (append_action);
-		this.set_accels_for_action ("app.append", {"<ctrl><shift>n"});
+		this.set_accels_for_action ("app.append", {append_node_accelerator});
 
 		var new_action = 
 			new GLib.SimpleAction ("new", null);
@@ -197,7 +198,7 @@ Incremental : Gtk.Application
 			this.release ();
 			});
 		this.add_action (new_action);
-		this.set_accels_for_action ("app.new", {"<ctrl>n"});
+		this.set_accels_for_action ("app.new", {file_new_accelerator});
 
 		var export_action = 
 			new GLib.SimpleAction ("export", null);
@@ -207,7 +208,7 @@ Incremental : Gtk.Application
 			this.release ();
 			});
 		this.add_action (export_action);
-		this.set_accels_for_action ("app.export", {"<ctrl>e"});
+		this.set_accels_for_action ("app.export", {file_export_accelerator});
 	}
 
     protected void
