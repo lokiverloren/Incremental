@@ -51,8 +51,6 @@ Incremental : Gtk.Application
     protected Gtk.ToggleButton hide_terminal;
     protected Gtk.ToggleButton hide_help;
 
-	protected Gtk.AccelGroup accel_group;
-
 	public enum
 	Columns
 	{
@@ -100,40 +98,48 @@ Incremental : Gtk.Application
         toggle_terminal();
 	}
 
-	public void toggle_tree_activate (Variant? parameter)
-	{
-		toggle_tree ();
-		stderr.printf ("toggle-tree action activated\n");
-	}
-
-	public void toggle_terminal_activate (Variant? parameter)
-	{
-		toggle_terminal ();
-		stderr.printf ("toggle-terminal action activated\n");
-	}
-
-	public void toggle_help_activate (Variant? parameter)
-	{
-		toggle_help ();
-		stderr.printf ("toggle-help action activated\n");
-	}
-
 	protected void
 	create_actions ()
 	{
 		var toggle_terminal_action = 
-			new GLib.SimpleAction ("toggle-terminal", null);
-		toggle_terminal_action.activate.connect (toggle_terminal_activate);
+			new GLib.SimpleAction.stateful ("toggle-terminal", null,
+				new Variant.boolean (false));
+		toggle_terminal_action.activate.connect (()=>{
+	    	this.hold ();
+	    	Variant state = toggle_terminal_action.get_state ();
+	    	bool b = state.get_boolean ();
+	    	toggle_terminal_action.set_state (new Variant.boolean (!b));
+    	    toggle_visible_prototype (interface_terminal.scroller);
+			this.release ();
+			});
 		this.add_action (toggle_terminal_action);
 		this.set_accels_for_action ("app.toggle-terminal", {"F12"});
 
-		var toggle_help_action = new GLib.SimpleAction ("toggle-help", null);
-		toggle_help_action.activate.connect (toggle_help_activate);
+		var toggle_help_action = 
+			new GLib.SimpleAction.stateful ("toggle-help", null,
+				new Variant.boolean (false));
+		toggle_help_action.activate.connect (()=> {
+	    	this.hold ();
+	    	Variant state = toggle_help_action.get_state();
+	    	bool b = state.get_boolean ();
+	    	toggle_help_action.set_state (new Variant.boolean (!b));
+    	    toggle_visible_prototype (interface_help.scroller);
+			this.release ();
+			});
 		this.add_action (toggle_help_action);
 		this.set_accels_for_action ("app.toggle-help", {"F1"});
 
-		var toggle_tree_action = new GLib.SimpleAction ("toggle-tree", null);
-		toggle_tree_action.activate.connect (toggle_tree_activate);
+		var toggle_tree_action = 
+			new GLib.SimpleAction.stateful ("toggle-tree", null,
+				new Variant.boolean (true));
+		toggle_tree_action.activate.connect (()=> {
+	    	this.hold ();
+	    	Variant state = toggle_tree_action.get_state();
+	    	bool b = state.get_boolean ();
+	    	toggle_tree_action.set_state (new Variant.boolean (!b));
+    	    toggle_visible_prototype (interface_tree.scroller);
+			this.release ();
+			});
 		this.add_action (toggle_tree_action);
 		this.set_accels_for_action ("app.toggle-tree", {"F10"});
 
@@ -153,7 +159,7 @@ Incremental : Gtk.Application
     protected void
 	toggle_tree ()
     {
-        toggle_visible_prototype (interface_tree.scroller);
+
     }
 
     protected void

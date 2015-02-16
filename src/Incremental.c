@@ -24,7 +24,6 @@
 #include <gtk/gtk.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdio.h>
 
 
 #define TYPE_INCREMENTAL (incremental_get_type ())
@@ -44,6 +43,8 @@ typedef struct _Incrementalsvp Incrementalsvp;
 #define INCREMENTAL_TYPE_COLUMNS (incremental_columns_get_type ())
 #define _g_free0(var) (var = (g_free (var), NULL))
 #define _g_object_unref0(var) ((var == NULL) ? NULL : (var = (g_object_unref (var), NULL)))
+typedef struct _Block1Data Block1Data;
+#define _g_variant_unref0(var) ((var == NULL) ? NULL : (var = (g_variant_unref (var), NULL)))
 
 typedef void (*MyCallBack) (GAction* a, void* user_data);
 struct _Incrementalsvp {
@@ -70,7 +71,6 @@ struct _Incremental {
 	GtkButton* redo;
 	GtkToggleButton* hide_terminal;
 	GtkToggleButton* hide_help;
-	GtkAccelGroup* accel_group;
 	Incrementalsvp interface_tree;
 	Incrementalsvp interface_document;
 	Incrementalsvp interface_help;
@@ -86,6 +86,14 @@ typedef enum  {
 	INCREMENTAL_COLUMNS_BODY,
 	INCREMENTAL_COLUMNS_N_COLUMNS
 } IncrementalColumns;
+
+struct _Block1Data {
+	int _ref_count_;
+	Incremental* self;
+	GSimpleAction* toggle_terminal_action;
+	GSimpleAction* toggle_help_action;
+	GSimpleAction* toggle_tree_action;
+};
 
 
 static gpointer incremental_parent_class = NULL;
@@ -108,14 +116,16 @@ void incremental_create_actions (Incremental* self);
 GtkGrid* incremental_create_viewer (Incremental* self);
 void incremental_toggle_help (Incremental* self);
 void incremental_toggle_terminal (Incremental* self);
-void incremental_toggle_tree_activate (Incremental* self, GVariant* parameter);
-void incremental_toggle_tree (Incremental* self);
-void incremental_toggle_terminal_activate (Incremental* self, GVariant* parameter);
-void incremental_toggle_help_activate (Incremental* self, GVariant* parameter);
-static void _incremental_toggle_terminal_activate_g_simple_action_activate (GSimpleAction* _sender, GVariant* parameter, gpointer self);
-static void _incremental_toggle_help_activate_g_simple_action_activate (GSimpleAction* _sender, GVariant* parameter, gpointer self);
-static void _incremental_toggle_tree_activate_g_simple_action_activate (GSimpleAction* _sender, GVariant* parameter, gpointer self);
+static Block1Data* block1_data_ref (Block1Data* _data1_);
+static void block1_data_unref (void * _userdata_);
+static void __lambda4_ (Block1Data* _data1_);
 void incremental_toggle_visible_prototype (Incremental* self, GtkWidget* widget);
+static void ___lambda4__g_simple_action_activate (GSimpleAction* _sender, GVariant* parameter, gpointer self);
+static void __lambda5_ (Block1Data* _data1_);
+static void ___lambda5__g_simple_action_activate (GSimpleAction* _sender, GVariant* parameter, gpointer self);
+static void __lambda6_ (Block1Data* _data1_);
+static void ___lambda6__g_simple_action_activate (GSimpleAction* _sender, GVariant* parameter, gpointer self);
+void incremental_toggle_tree (Incremental* self);
 void incremental_new_svp (Incremental* self, Incrementalsvp* result);
 gint incremental_main (gchar** args, int args_length1);
 static void incremental_finalize (GObject* obj);
@@ -200,104 +210,209 @@ static void incremental_real_activate (GApplication* base) {
 }
 
 
-void incremental_toggle_tree_activate (Incremental* self, GVariant* parameter) {
-	FILE* _tmp0_ = NULL;
-	g_return_if_fail (self != NULL);
-	incremental_toggle_tree (self);
-	_tmp0_ = stderr;
-	fprintf (_tmp0_, "toggle-tree action activated\n");
+static Block1Data* block1_data_ref (Block1Data* _data1_) {
+	g_atomic_int_inc (&_data1_->_ref_count_);
+	return _data1_;
 }
 
 
-void incremental_toggle_terminal_activate (Incremental* self, GVariant* parameter) {
-	FILE* _tmp0_ = NULL;
-	g_return_if_fail (self != NULL);
-	incremental_toggle_terminal (self);
-	_tmp0_ = stderr;
-	fprintf (_tmp0_, "toggle-terminal action activated\n");
+static void block1_data_unref (void * _userdata_) {
+	Block1Data* _data1_;
+	_data1_ = (Block1Data*) _userdata_;
+	if (g_atomic_int_dec_and_test (&_data1_->_ref_count_)) {
+		Incremental* self;
+		self = _data1_->self;
+		_g_object_unref0 (_data1_->toggle_tree_action);
+		_g_object_unref0 (_data1_->toggle_help_action);
+		_g_object_unref0 (_data1_->toggle_terminal_action);
+		_g_object_unref0 (self);
+		g_slice_free (Block1Data, _data1_);
+	}
 }
 
 
-void incremental_toggle_help_activate (Incremental* self, GVariant* parameter) {
-	FILE* _tmp0_ = NULL;
-	g_return_if_fail (self != NULL);
-	incremental_toggle_help (self);
-	_tmp0_ = stderr;
-	fprintf (_tmp0_, "toggle-help action activated\n");
+static void __lambda4_ (Block1Data* _data1_) {
+	Incremental* self;
+	GVariant* state = NULL;
+	GVariant* _tmp0_ = NULL;
+	gboolean b = FALSE;
+	gboolean _tmp1_ = FALSE;
+	GVariant* _tmp2_ = NULL;
+	GVariant* _tmp3_ = NULL;
+	Incrementalsvp _tmp4_ = {0};
+	GtkScrolledWindow* _tmp5_ = NULL;
+	self = _data1_->self;
+	g_application_hold ((GApplication*) self);
+	_tmp0_ = g_action_get_state ((GAction*) _data1_->toggle_terminal_action);
+	state = _tmp0_;
+	_tmp1_ = g_variant_get_boolean (state);
+	b = _tmp1_;
+	_tmp2_ = g_variant_new_boolean (!b);
+	g_variant_ref_sink (_tmp2_);
+	_tmp3_ = _tmp2_;
+	g_simple_action_set_state (_data1_->toggle_terminal_action, _tmp3_);
+	_g_variant_unref0 (_tmp3_);
+	_tmp4_ = self->interface_terminal;
+	_tmp5_ = _tmp4_.scroller;
+	incremental_toggle_visible_prototype (self, (GtkWidget*) _tmp5_);
+	g_application_release ((GApplication*) self);
+	_g_variant_unref0 (state);
 }
 
 
-static void _incremental_toggle_terminal_activate_g_simple_action_activate (GSimpleAction* _sender, GVariant* parameter, gpointer self) {
-	incremental_toggle_terminal_activate ((Incremental*) self, parameter);
+static void ___lambda4__g_simple_action_activate (GSimpleAction* _sender, GVariant* parameter, gpointer self) {
+	__lambda4_ (self);
 }
 
 
-static void _incremental_toggle_help_activate_g_simple_action_activate (GSimpleAction* _sender, GVariant* parameter, gpointer self) {
-	incremental_toggle_help_activate ((Incremental*) self, parameter);
+static void __lambda5_ (Block1Data* _data1_) {
+	Incremental* self;
+	GVariant* state = NULL;
+	GVariant* _tmp0_ = NULL;
+	gboolean b = FALSE;
+	gboolean _tmp1_ = FALSE;
+	GVariant* _tmp2_ = NULL;
+	GVariant* _tmp3_ = NULL;
+	Incrementalsvp _tmp4_ = {0};
+	GtkScrolledWindow* _tmp5_ = NULL;
+	self = _data1_->self;
+	g_application_hold ((GApplication*) self);
+	_tmp0_ = g_action_get_state ((GAction*) _data1_->toggle_help_action);
+	state = _tmp0_;
+	_tmp1_ = g_variant_get_boolean (state);
+	b = _tmp1_;
+	_tmp2_ = g_variant_new_boolean (!b);
+	g_variant_ref_sink (_tmp2_);
+	_tmp3_ = _tmp2_;
+	g_simple_action_set_state (_data1_->toggle_help_action, _tmp3_);
+	_g_variant_unref0 (_tmp3_);
+	_tmp4_ = self->interface_help;
+	_tmp5_ = _tmp4_.scroller;
+	incremental_toggle_visible_prototype (self, (GtkWidget*) _tmp5_);
+	g_application_release ((GApplication*) self);
+	_g_variant_unref0 (state);
 }
 
 
-static void _incremental_toggle_tree_activate_g_simple_action_activate (GSimpleAction* _sender, GVariant* parameter, gpointer self) {
-	incremental_toggle_tree_activate ((Incremental*) self, parameter);
+static void ___lambda5__g_simple_action_activate (GSimpleAction* _sender, GVariant* parameter, gpointer self) {
+	__lambda5_ (self);
+}
+
+
+static void __lambda6_ (Block1Data* _data1_) {
+	Incremental* self;
+	GVariant* state = NULL;
+	GVariant* _tmp0_ = NULL;
+	gboolean b = FALSE;
+	gboolean _tmp1_ = FALSE;
+	GVariant* _tmp2_ = NULL;
+	GVariant* _tmp3_ = NULL;
+	Incrementalsvp _tmp4_ = {0};
+	GtkScrolledWindow* _tmp5_ = NULL;
+	self = _data1_->self;
+	g_application_hold ((GApplication*) self);
+	_tmp0_ = g_action_get_state ((GAction*) _data1_->toggle_tree_action);
+	state = _tmp0_;
+	_tmp1_ = g_variant_get_boolean (state);
+	b = _tmp1_;
+	_tmp2_ = g_variant_new_boolean (!b);
+	g_variant_ref_sink (_tmp2_);
+	_tmp3_ = _tmp2_;
+	g_simple_action_set_state (_data1_->toggle_tree_action, _tmp3_);
+	_g_variant_unref0 (_tmp3_);
+	_tmp4_ = self->interface_tree;
+	_tmp5_ = _tmp4_.scroller;
+	incremental_toggle_visible_prototype (self, (GtkWidget*) _tmp5_);
+	g_application_release ((GApplication*) self);
+	_g_variant_unref0 (state);
+}
+
+
+static void ___lambda6__g_simple_action_activate (GSimpleAction* _sender, GVariant* parameter, gpointer self) {
+	__lambda6_ (self);
 }
 
 
 void incremental_create_actions (Incremental* self) {
-	GSimpleAction* toggle_terminal_action = NULL;
-	GSimpleAction* _tmp0_ = NULL;
-	gchar* _tmp1_ = NULL;
-	gchar** _tmp2_ = NULL;
-	gchar** _tmp3_ = NULL;
-	gint _tmp3__length1 = 0;
-	GSimpleAction* toggle_help_action = NULL;
-	GSimpleAction* _tmp4_ = NULL;
-	gchar* _tmp5_ = NULL;
+	Block1Data* _data1_;
+	GVariant* _tmp0_ = NULL;
+	GVariant* _tmp1_ = NULL;
+	GSimpleAction* _tmp2_ = NULL;
+	GSimpleAction* _tmp3_ = NULL;
+	gchar* _tmp4_ = NULL;
+	gchar** _tmp5_ = NULL;
 	gchar** _tmp6_ = NULL;
-	gchar** _tmp7_ = NULL;
-	gint _tmp7__length1 = 0;
-	GSimpleAction* toggle_tree_action = NULL;
-	GSimpleAction* _tmp8_ = NULL;
-	gchar* _tmp9_ = NULL;
-	gchar** _tmp10_ = NULL;
-	gchar** _tmp11_ = NULL;
-	gint _tmp11__length1 = 0;
+	gint _tmp6__length1 = 0;
+	GVariant* _tmp7_ = NULL;
+	GVariant* _tmp8_ = NULL;
+	GSimpleAction* _tmp9_ = NULL;
+	GSimpleAction* _tmp10_ = NULL;
+	gchar* _tmp11_ = NULL;
+	gchar** _tmp12_ = NULL;
+	gchar** _tmp13_ = NULL;
+	gint _tmp13__length1 = 0;
+	GVariant* _tmp14_ = NULL;
+	GVariant* _tmp15_ = NULL;
+	GSimpleAction* _tmp16_ = NULL;
+	GSimpleAction* _tmp17_ = NULL;
+	gchar* _tmp18_ = NULL;
+	gchar** _tmp19_ = NULL;
+	gchar** _tmp20_ = NULL;
+	gint _tmp20__length1 = 0;
 	g_return_if_fail (self != NULL);
-	_tmp0_ = g_simple_action_new ("toggle-terminal", NULL);
-	toggle_terminal_action = _tmp0_;
-	g_signal_connect_object (toggle_terminal_action, "activate", (GCallback) _incremental_toggle_terminal_activate_g_simple_action_activate, self, 0);
-	g_action_map_add_action ((GActionMap*) self, (GAction*) toggle_terminal_action);
-	_tmp1_ = g_strdup ("F12");
-	_tmp2_ = g_new0 (gchar*, 1 + 1);
-	_tmp2_[0] = _tmp1_;
+	_data1_ = g_slice_new0 (Block1Data);
+	_data1_->_ref_count_ = 1;
+	_data1_->self = g_object_ref (self);
+	_tmp0_ = g_variant_new_boolean (FALSE);
+	g_variant_ref_sink (_tmp0_);
+	_tmp1_ = _tmp0_;
+	_tmp2_ = g_simple_action_new_stateful ("toggle-terminal", NULL, _tmp1_);
 	_tmp3_ = _tmp2_;
-	_tmp3__length1 = 1;
-	gtk_application_set_accels_for_action ((GtkApplication*) self, "app.toggle-terminal", _tmp3_);
-	_tmp3_ = (_vala_array_free (_tmp3_, _tmp3__length1, (GDestroyNotify) g_free), NULL);
-	_tmp4_ = g_simple_action_new ("toggle-help", NULL);
-	toggle_help_action = _tmp4_;
-	g_signal_connect_object (toggle_help_action, "activate", (GCallback) _incremental_toggle_help_activate_g_simple_action_activate, self, 0);
-	g_action_map_add_action ((GActionMap*) self, (GAction*) toggle_help_action);
-	_tmp5_ = g_strdup ("F1");
-	_tmp6_ = g_new0 (gchar*, 1 + 1);
-	_tmp6_[0] = _tmp5_;
-	_tmp7_ = _tmp6_;
-	_tmp7__length1 = 1;
-	gtk_application_set_accels_for_action ((GtkApplication*) self, "app.toggle-help", _tmp7_);
-	_tmp7_ = (_vala_array_free (_tmp7_, _tmp7__length1, (GDestroyNotify) g_free), NULL);
-	_tmp8_ = g_simple_action_new ("toggle-tree", NULL);
-	toggle_tree_action = _tmp8_;
-	g_signal_connect_object (toggle_tree_action, "activate", (GCallback) _incremental_toggle_tree_activate_g_simple_action_activate, self, 0);
-	g_action_map_add_action ((GActionMap*) self, (GAction*) toggle_tree_action);
-	_tmp9_ = g_strdup ("F10");
-	_tmp10_ = g_new0 (gchar*, 1 + 1);
-	_tmp10_[0] = _tmp9_;
-	_tmp11_ = _tmp10_;
-	_tmp11__length1 = 1;
-	gtk_application_set_accels_for_action ((GtkApplication*) self, "app.toggle-tree", _tmp11_);
-	_tmp11_ = (_vala_array_free (_tmp11_, _tmp11__length1, (GDestroyNotify) g_free), NULL);
-	_g_object_unref0 (toggle_tree_action);
-	_g_object_unref0 (toggle_help_action);
-	_g_object_unref0 (toggle_terminal_action);
+	_g_variant_unref0 (_tmp1_);
+	_data1_->toggle_terminal_action = _tmp3_;
+	g_signal_connect_data (_data1_->toggle_terminal_action, "activate", (GCallback) ___lambda4__g_simple_action_activate, block1_data_ref (_data1_), (GClosureNotify) block1_data_unref, 0);
+	g_action_map_add_action ((GActionMap*) self, (GAction*) _data1_->toggle_terminal_action);
+	_tmp4_ = g_strdup ("F12");
+	_tmp5_ = g_new0 (gchar*, 1 + 1);
+	_tmp5_[0] = _tmp4_;
+	_tmp6_ = _tmp5_;
+	_tmp6__length1 = 1;
+	gtk_application_set_accels_for_action ((GtkApplication*) self, "app.toggle-terminal", _tmp6_);
+	_tmp6_ = (_vala_array_free (_tmp6_, _tmp6__length1, (GDestroyNotify) g_free), NULL);
+	_tmp7_ = g_variant_new_boolean (FALSE);
+	g_variant_ref_sink (_tmp7_);
+	_tmp8_ = _tmp7_;
+	_tmp9_ = g_simple_action_new_stateful ("toggle-help", NULL, _tmp8_);
+	_tmp10_ = _tmp9_;
+	_g_variant_unref0 (_tmp8_);
+	_data1_->toggle_help_action = _tmp10_;
+	g_signal_connect_data (_data1_->toggle_help_action, "activate", (GCallback) ___lambda5__g_simple_action_activate, block1_data_ref (_data1_), (GClosureNotify) block1_data_unref, 0);
+	g_action_map_add_action ((GActionMap*) self, (GAction*) _data1_->toggle_help_action);
+	_tmp11_ = g_strdup ("F1");
+	_tmp12_ = g_new0 (gchar*, 1 + 1);
+	_tmp12_[0] = _tmp11_;
+	_tmp13_ = _tmp12_;
+	_tmp13__length1 = 1;
+	gtk_application_set_accels_for_action ((GtkApplication*) self, "app.toggle-help", _tmp13_);
+	_tmp13_ = (_vala_array_free (_tmp13_, _tmp13__length1, (GDestroyNotify) g_free), NULL);
+	_tmp14_ = g_variant_new_boolean (TRUE);
+	g_variant_ref_sink (_tmp14_);
+	_tmp15_ = _tmp14_;
+	_tmp16_ = g_simple_action_new_stateful ("toggle-tree", NULL, _tmp15_);
+	_tmp17_ = _tmp16_;
+	_g_variant_unref0 (_tmp15_);
+	_data1_->toggle_tree_action = _tmp17_;
+	g_signal_connect_data (_data1_->toggle_tree_action, "activate", (GCallback) ___lambda6__g_simple_action_activate, block1_data_ref (_data1_), (GClosureNotify) block1_data_unref, 0);
+	g_action_map_add_action ((GActionMap*) self, (GAction*) _data1_->toggle_tree_action);
+	_tmp18_ = g_strdup ("F10");
+	_tmp19_ = g_new0 (gchar*, 1 + 1);
+	_tmp19_[0] = _tmp18_;
+	_tmp20_ = _tmp19_;
+	_tmp20__length1 = 1;
+	gtk_application_set_accels_for_action ((GtkApplication*) self, "app.toggle-tree", _tmp20_);
+	_tmp20_ = (_vala_array_free (_tmp20_, _tmp20__length1, (GDestroyNotify) g_free), NULL);
+	block1_data_unref (_data1_);
+	_data1_ = NULL;
 }
 
 
@@ -323,12 +438,7 @@ void incremental_toggle_visible_prototype (Incremental* self, GtkWidget* widget)
 
 
 void incremental_toggle_tree (Incremental* self) {
-	Incrementalsvp _tmp0_ = {0};
-	GtkScrolledWindow* _tmp1_ = NULL;
 	g_return_if_fail (self != NULL);
-	_tmp0_ = self->interface_tree;
-	_tmp1_ = _tmp0_.scroller;
-	incremental_toggle_visible_prototype (self, (GtkWidget*) _tmp1_);
 }
 
 
@@ -790,7 +900,6 @@ static void incremental_finalize (GObject* obj) {
 	_g_object_unref0 (self->redo);
 	_g_object_unref0 (self->hide_terminal);
 	_g_object_unref0 (self->hide_help);
-	_g_object_unref0 (self->accel_group);
 	incremental_svp_destroy (&self->interface_tree);
 	incremental_svp_destroy (&self->interface_document);
 	incremental_svp_destroy (&self->interface_help);
