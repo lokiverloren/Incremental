@@ -39,17 +39,33 @@ Incremental : Gtk.Application
     protected Gtk.HeaderBar headerbar;
 
     protected Gtk.ToggleButton hide_tree;
+    protected string hide_tree_accelerator = "F10";
+    protected string hide_tree_tip = "Toggle visibility of tree";
     protected Gtk.Button append_node;
+    protected string append_node_accelerator = "<ctrl><shift>n";
+    protected string append_node_tip = "Append new node to tree";
 
     protected Gtk.Box file_box;
     protected Gtk.Button file_new;
+    protected string file_new_accelerator = "<ctrl>n";
+    protected string file_new_tip = "Create new empty document";
     protected Gtk.FileChooserButton file_select;
     protected Gtk.Button file_export;
+    protected string file_export_accelerator = "<ctrl>e";
+    protected string file_export_tip = "Export to other format";
 
     protected Gtk.Button undo;
+    protected string undo_accelerator = "<ctrl>z";
+    protected string undo_tip = "Undo last change";
     protected Gtk.Button redo;
+    protected string redo_accelerator = "<ctrl>y";
+    protected string redo_tip = "Redo last undone change";
     protected Gtk.ToggleButton hide_terminal;
+    protected string hide_terminal_accelerator = "F12";
+    protected string hide_terminal_tip = "Toggle visibility of terminal";
     protected Gtk.ToggleButton hide_help;
+    protected string hide_help_accelerator = "F1";
+    protected string hide_help_tip = "Toggle visibility of help browser";
 
 	public enum
 	Columns
@@ -143,6 +159,55 @@ Incremental : Gtk.Application
 		this.add_action (toggle_tree_action);
 		this.set_accels_for_action ("app.toggle-tree", {"F10"});
 
+		var undo_action = 
+			new GLib.SimpleAction ("undo", null);
+		undo_action.activate.connect (()=> {
+	    	this.hold ();
+	    	stderr.printf ("user clicked undo or pressed <ctrl>z\n");
+			this.release ();
+			});
+		this.add_action (undo_action);
+		this.set_accels_for_action ("app.undo", {undo_accelerator});
+
+		var redo_action = 
+			new GLib.SimpleAction ("redo", null);
+		redo_action.activate.connect (()=> {
+	    	this.hold ();
+	    	stderr.printf ("user clicked redo or pressed <ctrl>y\n");
+			this.release ();
+			});
+		this.add_action (redo_action);
+		this.set_accels_for_action ("app.redo", {"<ctrl>y"});
+
+		var append_action = 
+			new GLib.SimpleAction ("append", null);
+		append_action.activate.connect (()=> {
+	    	this.hold ();
+	    	stderr.printf ("user clicked append node or pressed <ctrl><shift>n\n");
+			this.release ();
+			});
+		this.add_action (append_action);
+		this.set_accels_for_action ("app.append", {"<ctrl><shift>n"});
+
+		var new_action = 
+			new GLib.SimpleAction ("new", null);
+		new_action.activate.connect (()=> {
+	    	this.hold ();
+	    	stderr.printf ("user clicked new or pressed <ctrl>n\n");
+			this.release ();
+			});
+		this.add_action (new_action);
+		this.set_accels_for_action ("app.new", {"<ctrl>n"});
+
+		var export_action = 
+			new GLib.SimpleAction ("export", null);
+		export_action.activate.connect (()=> {
+	    	this.hold ();
+	    	stderr.printf ("user clicked export or pressed <ctrl>e\n");
+			this.release ();
+			});
+		this.add_action (export_action);
+		this.set_accels_for_action ("app.export", {"<ctrl>e"});
 	}
 
     protected void
@@ -174,6 +239,17 @@ Incremental : Gtk.Application
         toggle_visible_prototype (interface_terminal.scroller);
     }
 
+    protected string create_tip_with_accel (string tip, string accel)
+    {
+    	string accel_tip;
+    	uint accel_key;
+    	Gdk.ModifierType accel_mods;
+    	Gtk.accelerator_parse (accel, out accel_key, out accel_mods);
+    	accel_tip = "\n<b>(" + Gtk.accelerator_get_label (accel_key, accel_mods) +
+    		")</b>";
+    	return tip + accel_tip;
+    }
+
 	protected Gtk.HeaderBar
 	create_headerbar ()
 	{
@@ -181,21 +257,29 @@ Incremental : Gtk.Application
         headerbar.set_show_close_button(true);
 
         append_node = new Button.from_icon_name ("list-add-symbolic");
-        append_node.set_tooltip_text ("Append new item to tree");
+        append_node.set_tooltip_markup (create_tip_with_accel (append_node_tip,
+        	append_node_accelerator));
+        append_node.set_action_name ("app.append");
         headerbar.pack_start (append_node);
 
 		undo = new Button.from_icon_name ("edit-undo-symbolic");
-		undo.set_tooltip_text ("Undo");
+        undo.set_tooltip_markup (create_tip_with_accel (undo_tip,
+        	undo_accelerator));
+        undo.set_action_name ("app.undo");
 		headerbar.pack_start (undo);
 
 		redo = new Button.from_icon_name ("edit-redo-symbolic");
-		redo.set_tooltip_text ("Redo");
+        redo.set_tooltip_markup (create_tip_with_accel (redo_tip,
+        	redo_accelerator));
+        redo.set_action_name ("app.redo");
 		headerbar.pack_start (redo);
 
 		file_box = new Box (Orientation.HORIZONTAL, 0);
 
 		file_new = new Button.from_icon_name ("document-new-symbolic");
-		file_new.set_tooltip_text ("New document");
+        file_new.set_tooltip_markup (create_tip_with_accel (file_new_tip,
+        	file_new_accelerator));
+		file_new.set_action_name ("app.new");
 
 		file_select =
 			new FileChooserButton ("No file open", FileChooserAction.OPEN);
@@ -203,7 +287,10 @@ Incremental : Gtk.Application
 
 		file_export =
             new Button.from_icon_name ("document-export-symbolic");
-		file_export.set_tooltip_text ("Export document");
+        file_export.set_tooltip_markup (create_tip_with_accel (file_export_tip,
+        	file_export_accelerator));
+		file_export.set_action_name ("app.export");
+
 		file_box.add (file_new);
 		file_box.add (file_select);
 		file_box.add (file_export);
@@ -213,7 +300,8 @@ Incremental : Gtk.Application
 		hide_help = new ToggleButton ();
         hide_help.image = new Gtk.Image.from_icon_name
             ("help-browser-symbolic", IconSize.BUTTON);
-        hide_help.set_tooltip_text ("Open help browser");
+        hide_help.set_tooltip_markup (create_tip_with_accel (hide_help_tip,
+        	hide_help_accelerator));
         //hide_help.toggled.connect (toggle_help);
         hide_help.set_action_name ("app.toggle-help");
 		headerbar.pack_end (hide_help);
@@ -221,7 +309,8 @@ Incremental : Gtk.Application
         hide_terminal = new ToggleButton ();
         hide_terminal.image = new Gtk.Image.from_icon_name
             ("utilities-terminal-symbolic", IconSize.BUTTON);
-        hide_terminal.set_tooltip_text ("Pop up terminal");
+        hide_terminal.set_tooltip_markup (create_tip_with_accel (hide_terminal_tip,
+        	hide_terminal_accelerator));
         //hide_terminal.toggled.connect (toggle_terminal);
         hide_terminal.set_action_name ("app.toggle-terminal");
         headerbar.pack_end (hide_terminal);
@@ -229,7 +318,8 @@ Incremental : Gtk.Application
         hide_tree = new ToggleButton ();
         hide_tree.image = new Gtk.Image.from_icon_name
             ("pane-hide-symbolic", IconSize.BUTTON);
-        hide_tree.set_tooltip_text ("Hide tree");
+        hide_tree.set_tooltip_markup (create_tip_with_accel (hide_tree_tip,
+        	hide_tree_accelerator));
     	hide_tree.active = true;
         //hide_tree.toggled.connect(toggle_tree);
         hide_tree.set_action_name ("app.toggle-tree");
